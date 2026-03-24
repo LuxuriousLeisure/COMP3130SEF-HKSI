@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">香港學校資訊</string>
+    <string name="search_hint">搜尋學校名稱</string>
+    <string name="prev_page">上一頁</string>
+    <string name="next_page">下一頁</string>
+    <string name="school_website">學校官網</string>
+    <string name="confirm">確定</string>
+    <string name="open_website">打開官網</string>
+</resources>

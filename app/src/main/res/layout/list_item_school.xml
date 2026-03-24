@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <!-- 學校名稱（對應Lab04的name TextView） -->
+    <TextView
+        android:id="@+id/tv_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#3700B3"/>
+
+    <!-- 學校分區（對應Lab04的email TextView） -->
+    <TextView
+        android:id="@+id/tv_district"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="#03DAC5"
+        android:layout_marginTop="2dp"/>
+
+    <!-- 聯絡電話（對應Lab04的address TextView） -->
+    <TextView
+        android:id="@+id/tv_phone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="#888888"
+        android:layout_marginTop="2dp"/>
+
+</LinearLayout>
