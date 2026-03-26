@@ -32,7 +32,11 @@ public class JsonHandlerThread extends Thread {
                 String phone = obj.getString("聯絡電話");
                 String addr = obj.getString("中文地址");
                 String website = obj.getString("WEBSITE");
-                SchoolInfo.addSchool(name, district, phone, addr, website);
+                String schoolType = obj.getString("學校類型");
+                String gender = obj.getString("就讀學生性別");
+                String finance = obj.getString("資助種類");
+
+                SchoolInfo.addSchool(name, district, phone, addr, website, schoolType, gender, finance);
             }
         } catch (Exception e) {
             Log.e(TAG, "解析错误："+e.getMessage());

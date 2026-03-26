@@ -13,12 +13,60 @@
         android:hint="@string/search_hint"
         android:padding="8dp"/>
 
+    <!-- 筛选器 -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <!-- 筛选1：学校类型 -->
+            <Button
+                android:id="@+id/filter_type"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="學校類型"
+                android:textSize="12sp"
+                android:layout_marginHorizontal="4dp"/>
+
+            <!-- 筛选2：学生性别 -->
+            <Button
+                android:id="@+id/filter_gender"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="學生性別"
+                android:textSize="12sp"
+                android:layout_marginHorizontal="4dp"/>
+
+            <!-- 筛选3：资助种类 -->
+            <Button
+                android:id="@+id/filter_finance"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="資助種類"
+                android:textSize="12sp"
+                android:layout_marginHorizontal="4dp"/>
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
     <!-- 学校列表 -->
     <ListView
         android:id="@+id/list_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_weight="1"
+        android:background="#ffffff"
+        android:divider="#ffffff"
+        android:dividerHeight="16dp"
+        android:clipToPadding="false"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:scrollbarStyle="outsideInset"/>
 
     <!-- 搜尋無結果提示 -->
     <TextView

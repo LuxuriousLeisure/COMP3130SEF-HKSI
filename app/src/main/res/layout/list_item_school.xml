@@ -1,35 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 外层父布局 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="10dp">
+    >
 
-    <!-- 學校名稱（對應Lab04的name TextView） -->
-    <TextView
-        android:id="@+id/tv_name"
+    <!-- 卡片布局 -->
+    <LinearLayout
+        android:id="@+id/item_card_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:textColor="#3700B3"/>
+        android:orientation="vertical"
+        android:padding="16dp">
 
-    <!-- 學校分區（對應Lab04的email TextView） -->
-    <TextView
-        android:id="@+id/tv_district"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:textColor="#03DAC5"
-        android:layout_marginTop="2dp"/>
+        <TextView
+            android:id="@+id/tv_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#3700B3"/>
 
-    <!-- 聯絡電話（對應Lab04的address TextView） -->
-    <TextView
-        android:id="@+id/tv_phone"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:textColor="#888888"
-        android:layout_marginTop="2dp"/>
+        <TextView
+            android:id="@+id/tv_district"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="#607d8b"
+            android:layout_marginTop="8dp"/>
+
+        <TextView
+            android:id="@+id/tv_phone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#757575"
+            android:layout_marginTop="8dp"/>
+
+    </LinearLayout>
 
 </LinearLayout>
