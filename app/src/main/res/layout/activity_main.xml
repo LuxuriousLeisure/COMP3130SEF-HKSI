@@ -1,30 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 根布局：垂直排列 → 上面列表，下面分页栏 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- 根布局改为 ConstraintLayout，实现底部固定 -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <!-- 搜索框（引用字符串资源，Lab02规范） -->
+    <!-- 搜索框 -->
     <EditText
         android:id="@+id/et_search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/search_hint"
-        android:padding="8dp"/>
+        android:padding="8dp"
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <!-- 筛选器 -->
     <HorizontalScrollView
+        android:id="@+id/scroll_filter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:scrollbars="none">
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@id/et_search">
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:padding="8dp">
+            android:padding="0dp">
 
-            <!-- 筛选1：学校类型 -->
             <Button
                 android:id="@+id/filter_type"
                 android:layout_width="wrap_content"
@@ -33,7 +37,6 @@
                 android:textSize="12sp"
                 android:layout_marginHorizontal="4dp"/>
 
-            <!-- 筛选2：学生性别 -->
             <Button
                 android:id="@+id/filter_gender"
                 android:layout_width="wrap_content"
@@ -42,7 +45,6 @@
                 android:textSize="12sp"
                 android:layout_marginHorizontal="4dp"/>
 
-            <!-- 筛选3：资助种类 -->
             <Button
                 android:id="@+id/filter_finance"
                 android:layout_width="wrap_content"
@@ -54,21 +56,22 @@
         </LinearLayout>
     </HorizontalScrollView>
 
-    <!-- 学校列表 -->
+    <!-- 学校列表：自动填充中间区域 -->
     <ListView
         android:id="@+id/list_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
         android:background="#ffffff"
         android:divider="#ffffff"
         android:dividerHeight="16dp"
         android:clipToPadding="false"
         android:paddingLeft="16dp"
         android:paddingRight="16dp"
-        android:scrollbarStyle="outsideInset"/>
+        android:scrollbarStyle="outsideInset"
+        app:layout_constraintTop_toBottomOf="@id/scroll_filter"
+        app:layout_constraintBottom_toTopOf="@id/layout_pagination"/>
 
-    <!-- 搜尋無結果提示 -->
+    <!-- 无结果提示：和列表重叠显示 -->
     <TextView
         android:id="@+id/tv_empty"
         android:layout_width="match_parent"
@@ -77,18 +80,23 @@
         android:textSize="16sp"
         android:gravity="center"
         android:padding="20dp"
-        android:visibility="gone"/> <!-- 預設隱藏 -->
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/scroll_filter"
+        app:layout_constraintBottom_toTopOf="@id/layout_pagination"/>
 
-    <!-- ================== 分页栏（文字全部引用strings.xml） ================== -->
+    <!-- ================== 分页栏：固定在屏幕底部 ================== -->
     <LinearLayout
+        android:id="@+id/layout_pagination"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center"
         android:background="#f5f5f5"
-        android:padding="6dp">
+        android:padding="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- 上一页 -->
         <Button
             android:id="@+id/btn_prev"
             android:layout_width="0dp"
@@ -97,7 +105,6 @@
             android:text="@string/prev_page"
             android:textSize="11sp"/>
 
-        <!-- 页码1 -->
         <Button
             android:id="@+id/page_btn1"
             android:layout_width="0dp"
@@ -105,7 +112,6 @@
             android:layout_weight="1"
             android:textSize="11sp"/>
 
-        <!-- 页码2 -->
         <Button
             android:id="@+id/page_btn2"
             android:layout_width="0dp"
@@ -113,7 +119,6 @@
             android:layout_weight="1"
             android:textSize="11sp"/>
 
-        <!-- 页码3 -->
         <Button
             android:id="@+id/page_btn3"
             android:layout_width="0dp"
@@ -121,7 +126,6 @@
             android:layout_weight="1"
             android:textSize="11sp"/>
 
-        <!-- 页码4 -->
         <Button
             android:id="@+id/page_btn4"
             android:layout_width="0dp"
@@ -129,7 +133,6 @@
             android:layout_weight="1"
             android:textSize="11sp"/>
 
-        <!-- 页码5 -->
         <Button
             android:id="@+id/page_btn5"
             android:layout_width="0dp"
@@ -137,7 +140,6 @@
             android:layout_weight="1"
             android:textSize="11sp"/>
 
-        <!-- 下一页 -->
         <Button
             android:id="@+id/btn_next"
             android:layout_width="0dp"
@@ -147,5 +149,4 @@
             android:textSize="11sp"/>
 
     </LinearLayout>
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

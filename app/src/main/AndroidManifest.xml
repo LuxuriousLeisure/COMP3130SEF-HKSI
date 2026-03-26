@@ -17,9 +17,9 @@
         <activity
             android:name=".SchoolWebViewActivity"
             android:exported="false" />
-        <activity
-            android:name=".activity_school_web_view"
-            android:exported="false" />
+<!--        <activity-->
+<!--            android:name=".activity_school_web_view"-->
+<!--            android:exported="false" />-->
         <activity
             android:name=".MainActivity"
             android:exported="true">
