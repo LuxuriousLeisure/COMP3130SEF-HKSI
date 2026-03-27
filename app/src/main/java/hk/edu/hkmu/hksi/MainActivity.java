@@ -11,6 +11,8 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.PopupMenu;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AlertDialog;
@@ -64,25 +66,86 @@ public class MainActivity extends AppCompatActivity {
         Button btnFilterFinance = findViewById(R.id.filter_finance);
 
 // 1. 学校类型筛选
-        btnFilterType.setOnClickListener(v -> showFilterDialog("學校類型",
-                new String[]{"全部", "小學", "中學"}, selectedText -> {
-                    m_filterType = selectedText.equals("全部") ? "" : selectedText;
-                    applySearchAndFilter();
-                }));
+//        btnFilterType.setOnClickListener(v -> showFilterDialog("學校類型",
+//                new String[]{"全部", "小學", "中學"}, selectedText -> {
+//                    m_filterType = selectedText.equals("全部") ? "" : selectedText;
+//                    applySearchAndFilter();
+//                }));
+        btnFilterType.setText("學校類型 全部");
+        btnFilterType.setOnClickListener(v -> {
+            PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterType);
+            popupMenu.getMenuInflater().inflate(R.menu.menu_school_type, popupMenu.getMenu());
+
+            popupMenu.setOnMenuItemClickListener(item -> {
+                String selected = "";
+                int id = item.getItemId();
+                if (id == R.id.option_all) selected = "全部";
+                else if (id == R.id.option_primary) selected = "小學";
+                else if (id == R.id.option_middle) selected = "中學";
+
+                m_filterType = selected.equals("全部") ? "" : selected;
+                btnFilterType.setText("學校類型 " + selected);
+                applySearchAndFilter();
+                Toast.makeText(this, "选中：" + selected, Toast.LENGTH_SHORT).show();
+                return true;
+            });
+            popupMenu.show();
+        });
+
 
 // 2. 学生性别筛选
-        btnFilterGender.setOnClickListener(v -> showFilterDialog("學生性別",
-                new String[]{"全部", "男女", "男", "女"}, selectedText -> {
-                    m_filterGender = selectedText.equals("全部") ? "" : selectedText;
-                    applySearchAndFilter();
-                }));
+//        btnFilterGender.setOnClickListener(v -> showFilterDialog("學生性別",
+//                new String[]{"全部", "男女", "男", "女"}, selectedText -> {
+//                    m_filterGender = selectedText.equals("全部") ? "" : selectedText;
+//                    applySearchAndFilter();
+//                }));
+        btnFilterGender.setText("學生性別 全部");
+        btnFilterGender.setOnClickListener(v -> {
+            PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterGender);
+            popupMenu.getMenuInflater().inflate(R.menu.menu_gender, popupMenu.getMenu());
+
+            popupMenu.setOnMenuItemClickListener(item -> {
+                String selected = "";
+                int id = item.getItemId();
+                if (id == R.id.gender_all) selected = "全部";
+                else if (id == R.id.gender_mix) selected = "男女";
+                else if (id == R.id.gender_male) selected = "男";
+                else if (id == R.id.gender_female) selected = "女";
+
+                m_filterGender = selected.equals("全部") ? "" : selected;
+                btnFilterGender.setText("學生性別 " + selected);
+                applySearchAndFilter();
+                return true;
+            });
+            popupMenu.show();
+        });
 
 // 3. 资助种类筛选
-        btnFilterFinance.setOnClickListener(v -> showFilterDialog("資助種類",
-                new String[]{"全部", "資助", "官立", "私立"}, selectedText -> {
-                    m_filterFinance = selectedText.equals("全部") ? "" : selectedText;
-                    applySearchAndFilter();
-                }));
+//        btnFilterFinance.setOnClickListener(v -> showFilterDialog("資助種類",
+//                new String[]{"全部", "資助", "官立", "私立"}, selectedText -> {
+//                    m_filterFinance = selectedText.equals("全部") ? "" : selectedText;
+//                    applySearchAndFilter();
+//                }));
+        btnFilterFinance.setText("資助種類 全部");
+        btnFilterFinance.setOnClickListener(v -> {
+            PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterFinance);
+            popupMenu.getMenuInflater().inflate(R.menu.menu_finance, popupMenu.getMenu());
+
+            popupMenu.setOnMenuItemClickListener(item -> {
+                String selected = "";
+                int id = item.getItemId();
+                if (id == R.id.finance_all) selected = "全部";
+                else if (id == R.id.finance_subsidy) selected = "資助";
+                else if (id == R.id.finance_official) selected = "官立";
+                else if (id == R.id.finance_private) selected = "私立";
+
+                m_filterFinance = selected.equals("全部") ? "" : selected;
+                btnFilterFinance.setText("資助種類 " + selected);
+                applySearchAndFilter();
+                return true;
+            });
+            popupMenu.show();
+        });
 
         // 拉取JSON数据
         JsonHandlerThread thread = new JsonHandlerThread();

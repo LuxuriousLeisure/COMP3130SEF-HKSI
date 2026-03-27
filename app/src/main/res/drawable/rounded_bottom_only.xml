@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#f0f2f5"/>
+    <!-- 只开启 底部两个圆角 -->
+    <corners
+        android:topLeftRadius="0dp"
+        android:topRightRadius="0dp"
+        android:bottomLeftRadius="12dp"
+        android:bottomRightRadius="12dp"/>
+</shape>

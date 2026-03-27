@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!-- 標題列 Toolbar（完全抄 Lab03 佈局） -->
+    <!-- 標題列 Toolbar -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/web_toolbar"
         android:layout_width="match_parent"
