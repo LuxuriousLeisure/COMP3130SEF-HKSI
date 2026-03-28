@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 根布局改为 ConstraintLayout，实现底部固定 -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -8,7 +7,7 @@
     android:fitsSystemWindows="true"
     android:background="#FFFFFF">
 
-    <!-- 搜索框 -->
+    <!-- 搜索框（保持不变） -->
     <EditText
         android:id="@+id/et_search"
         android:layout_width="match_parent"
@@ -20,7 +19,7 @@
         android:textColorHint="#666666"
         app:layout_constraintTop_toTopOf="parent"/>
 
-    <!-- 筛选器 -->
+    <!-- 筛选器（保持不变） -->
     <HorizontalScrollView
         android:id="@+id/scroll_filter"
         android:layout_width="match_parent"
@@ -39,7 +38,6 @@
                 android:id="@+id/filter_type"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
-
                 android:textSize="12sp"
                 android:layout_marginHorizontal="4dp"/>
 
@@ -47,7 +45,6 @@
                 android:id="@+id/filter_gender"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
-
                 android:textSize="12sp"
                 android:layout_marginHorizontal="4dp"/>
 
@@ -55,33 +52,50 @@
                 android:id="@+id/filter_finance"
                 android:layout_width="wrap_content"
                 android:layout_height="36dp"
-
                 android:textSize="12sp"
                 android:layout_marginHorizontal="4dp"/>
 
         </LinearLayout>
     </HorizontalScrollView>
 
-    <!-- 学校列表：自动填充中间区域 -->
-    <ListView
-        android:id="@+id/list_view"
+    <!-- ================== 核心修改：列表+地图 55开 ================== -->
+    <LinearLayout
+        android:id="@+id/layout_content"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="#ffffff"
-        android:divider="#ffffff"
-        android:dividerHeight="16dp"
-        android:clipToPadding="false"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:scrollbarStyle="outsideInset"
+        android:orientation="horizontal"
         app:layout_constraintTop_toBottomOf="@id/scroll_filter"
-        app:layout_constraintBottom_toTopOf="@id/layout_pagination"/>
+        app:layout_constraintBottom_toTopOf="@id/layout_pagination">
 
-    <!-- 无结果提示：和列表重叠显示 -->
+        <!-- 学校列表（左50%） -->
+        <ListView
+            android:id="@+id/list_view"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="#ffffff"
+            android:divider="#ffffff"
+            android:dividerHeight="16dp"
+            android:clipToPadding="false"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:scrollbarStyle="outsideInset"/>
+
+        <!-- 地图（右50%） -->
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
+
+    </LinearLayout>
+
+    <!-- 无结果提示（调整约束，与内容区域重叠） -->
     <TextView
         android:id="@+id/tv_empty"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:text="暫無相關學校"
         android:textSize="16sp"
         android:gravity="center"
@@ -90,7 +104,7 @@
         app:layout_constraintTop_toBottomOf="@id/scroll_filter"
         app:layout_constraintBottom_toTopOf="@id/layout_pagination"/>
 
-    <!-- ================== 分页栏：固定在屏幕底部 ================== -->
+    <!-- 分页栏（保持不变） -->
     <LinearLayout
         android:id="@+id/layout_pagination"
         android:layout_width="match_parent"

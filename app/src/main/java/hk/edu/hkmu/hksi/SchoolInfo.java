@@ -18,11 +18,15 @@ public class SchoolInfo {
 
     public static ArrayList<HashMap<String, String>> schoolList = new ArrayList<>();
 
+
+    public static final String LATITUDE = "緯度";
+    public static final String LONGITUDE = "經度";
     // ✅ 修复：新增带筛选参数的方法（解析JSON时必须用这个！）
     public static void addSchool(
             String name, String district, String phone,
             String address, String website,
-            String schoolType, String gender, String finance  // 新增3个筛选字段
+            String schoolType, String gender, String finance,
+            String lat, String lng
     ) {
         HashMap<String, String> map = new HashMap<>();
         // 原有数据
@@ -35,6 +39,9 @@ public class SchoolInfo {
         map.put(SCHOOL_LEVEL, schoolType);
         map.put(STUDENTS_GENDER, gender);
         map.put(FINANCE_TYPE, finance);
+
+        map.put(LATITUDE, lat);
+        map.put(LONGITUDE, lng);
 
         schoolList.add(map);
     }

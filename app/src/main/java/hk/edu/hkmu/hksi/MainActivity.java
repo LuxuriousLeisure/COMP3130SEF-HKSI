@@ -17,14 +17,25 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AlertDialog;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+// 1. 实现 OnMapReadyCallback 接口
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
     private ListView listView;
     private EditText etSearch;
     private TextView tvEmpty;
+
+    // 地图相关变量
+    private GoogleMap mMap;
 
     // ====================== 筛选变量（3个条件） ======================
     private String m_filterType = "";     // 學校類型：小學/中學
@@ -65,12 +76,7 @@ public class MainActivity extends AppCompatActivity {
         Button btnFilterGender = findViewById(R.id.filter_gender);
         Button btnFilterFinance = findViewById(R.id.filter_finance);
 
-// 1. 学校类型筛选
-//        btnFilterType.setOnClickListener(v -> showFilterDialog("學校類型",
-//                new String[]{"全部", "小學", "中學"}, selectedText -> {
-//                    m_filterType = selectedText.equals("全部") ? "" : selectedText;
-//                    applySearchAndFilter();
-//                }));
+        // 1. 学校类型筛选
         btnFilterType.setText("學校類型 全部");
         btnFilterType.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterType);
@@ -92,13 +98,7 @@ public class MainActivity extends AppCompatActivity {
             popupMenu.show();
         });
 
-
-// 2. 学生性别筛选
-//        btnFilterGender.setOnClickListener(v -> showFilterDialog("學生性別",
-//                new String[]{"全部", "男女", "男", "女"}, selectedText -> {
-//                    m_filterGender = selectedText.equals("全部") ? "" : selectedText;
-//                    applySearchAndFilter();
-//                }));
+        // 2. 学生性别筛选
         btnFilterGender.setText("學生性別 全部");
         btnFilterGender.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterGender);
@@ -120,12 +120,7 @@ public class MainActivity extends AppCompatActivity {
             popupMenu.show();
         });
 
-// 3. 资助种类筛选
-//        btnFilterFinance.setOnClickListener(v -> showFilterDialog("資助種類",
-//                new String[]{"全部", "資助", "官立", "私立"}, selectedText -> {
-//                    m_filterFinance = selectedText.equals("全部") ? "" : selectedText;
-//                    applySearchAndFilter();
-//                }));
+        // 3. 资助种类筛选
         btnFilterFinance.setText("資助種類 全部");
         btnFilterFinance.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterFinance);
@@ -192,6 +187,21 @@ public class MainActivity extends AppCompatActivity {
                     })
                     .show();
         });
+
+        // 2. 初始化地图
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(this);
+        }
+    }
+
+    // 3. 实现地图回调方法
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+
+        refreshMapMarkers();
     }
 
     // ====================== 搜索监听 ======================
@@ -246,22 +256,50 @@ public class MainActivity extends AppCompatActivity {
         totalPage = (SchoolInfo.schoolList.size() + PAGE_SIZE - 1) / PAGE_SIZE;
         refreshList();
         refreshPageButtons();
+        refreshMapMarkers();
     }
 
-    // ====================== 筛选弹窗工具方法 ======================
-    private void showFilterDialog(String title, String[] options, OnFilterSelectedListener listener) {
-        new AlertDialog.Builder(this)
-                .setTitle(title)
-                .setItems(options, (dialog, which) -> {
-                    listener.onSelected(options[which]);
-                    dialog.dismiss();
-                })
-                .show();
-    }
+    private void refreshMapMarkers() {
+        // 如果地图还没准备好，就不执行
+        if (mMap == null) return;
 
-    // 筛选回调接口
-    interface OnFilterSelectedListener {
-        void onSelected(String selected);
+        // 1. 清空地图上旧的 Marker
+        mMap.clear();
+
+        // 2. 遍历当前符合条件的所有学校（注意：我们在地图上展示所有符合条件的学校，而不是只展示当前页的 20 个，这样体验更好）
+        for (HashMap<String, String> school : SchoolInfo.schoolList) {
+            try {
+                String latStr = school.get(SchoolInfo.LATITUDE);
+                String lngStr = school.get(SchoolInfo.LONGITUDE);
+
+                if (latStr != null && lngStr != null && !latStr.isEmpty() && !lngStr.isEmpty()) {
+                    double lat = Double.parseDouble(latStr);
+                    double lng = Double.parseDouble(lngStr);
+                    LatLng location = new LatLng(lat, lng);
+
+                    // 添加标记
+                    mMap.addMarker(new MarkerOptions()
+                            .position(location)
+                            .title(school.get(SchoolInfo.NAME))
+                            .snippet("電話: " + school.get(SchoolInfo.PHONE)));
+                }
+            } catch (NumberFormatException e) {
+                // 防止某些数据经纬度格式异常导致崩溃
+                e.printStackTrace();
+            }
+        }
+
+        // 3. (可选) 自动调整摄像头位置：如果列表有数据，将镜头移动到第一个学校的位置
+        if (!SchoolInfo.schoolList.isEmpty()) {
+            try {
+                double firstLat = Double.parseDouble(SchoolInfo.schoolList.get(0).get(SchoolInfo.LATITUDE));
+                double firstLng = Double.parseDouble(SchoolInfo.schoolList.get(0).get(SchoolInfo.LONGITUDE));
+                // 移动镜头，Zoom 参数可根据需要调整 (如 11 适合看全港，14 适合看街区)
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(firstLat, firstLng), 12));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     // ====================== 分页功能（完全不变） ======================
