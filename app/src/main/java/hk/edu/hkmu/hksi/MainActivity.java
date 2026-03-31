@@ -225,8 +225,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         for (HashMap<String, String> school : allSchoolList) {
             // 1. 搜索匹配
+//            boolean matchName = keyword.isEmpty()
+//                    || school.get(SchoolInfo.NAME).contains(keyword);
             boolean matchName = keyword.isEmpty()
-                    || school.get(SchoolInfo.NAME).contains(keyword);
+                    || (school.get(SchoolInfo.NAME) != null && school.get(SchoolInfo.NAME).contains(keyword))
+                    || (school.get(SchoolInfo.NAME_EN) != null && school.get(SchoolInfo.NAME_EN).contains(keyword));
 
             // 2. 筛选匹配（使用重命名后的变量）
             boolean matchType = m_filterType.isEmpty()

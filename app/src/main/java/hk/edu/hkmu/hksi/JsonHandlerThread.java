@@ -28,6 +28,7 @@ public class JsonHandlerThread extends Thread {
                 JSONObject obj = array.getJSONObject(i);
                 // 👇 解析学校字段（和你给的示例完全对应）
                 String name = obj.getString("中文名稱");
+                String name_en = obj.getString("ENGLISH NAME");
                 String district = obj.getString("分區");
                 String phone = obj.getString("聯絡電話");
                 String addr = obj.getString("中文地址");
@@ -39,7 +40,7 @@ public class JsonHandlerThread extends Thread {
                 String lat = obj.getString("緯度");
                 String lng = obj.getString("經度");
 
-                SchoolInfo.addSchool(name, district, phone, addr, website, schoolType, gender, finance,lat, lng);
+                SchoolInfo.addSchool(name, name_en, district, phone, addr, website, schoolType, gender, finance,lat, lng);
             }
         } catch (Exception e) {
             Log.e(TAG, "解析错误："+e.getMessage());

@@ -6,6 +6,7 @@ import java.util.HashMap;
 public class SchoolInfo {
     // 原有列表展示字段
     public static String NAME = "name";
+    public static String NAME_EN = "name_en";
     public static String DISTRICT = "district";
     public static String PHONE = "phone";
     public static String ADDR = "address";
@@ -23,7 +24,7 @@ public class SchoolInfo {
     public static final String LONGITUDE = "經度";
     // ✅ 修复：新增带筛选参数的方法（解析JSON时必须用这个！）
     public static void addSchool(
-            String name, String district, String phone,
+            String name, String name_en, String district, String phone,
             String address, String website,
             String schoolType, String gender, String finance,
             String lat, String lng
@@ -31,6 +32,7 @@ public class SchoolInfo {
         HashMap<String, String> map = new HashMap<>();
         // 原有数据
         map.put(NAME, name);
+        map.put(NAME_EN, name_en);
         map.put(DISTRICT, district);
         map.put(PHONE, phone);
         map.put(ADDR, address);
