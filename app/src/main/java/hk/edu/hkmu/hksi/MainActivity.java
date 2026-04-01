@@ -1,5 +1,8 @@
 package hk.edu.hkmu.hksi;
 
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -26,7 +29,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 // 1. 实现 OnMapReadyCallback 接口
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -54,10 +59,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // 搜索+筛选用：保存全部原始数据
     private List<HashMap<String, String>> allSchoolList = new ArrayList<>();
 
+    private SharedPreferences mSharedPref;
+    private static final String KEY_FAVORITE_SCHOOLS = "favorite_school_set";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mSharedPref = getApplicationContext().getSharedPreferences(
+                "SchoolFavoritePref",  // 配置文件名
+                Context.MODE_PRIVATE   // 私有模式
+        );
 
         // 绑定控件
         listView = findViewById(R.id.list_view);
@@ -169,23 +182,47 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // 列表点击弹窗（原有功能完全保留）
         listView.setOnItemClickListener((parent, view, position, id) -> {
             HashMap<String,String> school = getCurrentPageData().get(position);
+            String schoolName = school.get(SchoolInfo.NAME);
             String website = school.get(SchoolInfo.WEBSITE);
 
-            new AlertDialog.Builder(MainActivity.this)
-                    .setTitle(school.get(SchoolInfo.NAME))
+            // 【官方规范】读取收藏集合
+            Set<String> originFavSet = mSharedPref.getStringSet(KEY_FAVORITE_SCHOOLS, new HashSet<>());
+            // 必须复制新集合（谷歌强制要求：不可修改原生返回的Set）
+            HashSet<String> editFavSet = new HashSet<>(originFavSet);
+            boolean isFavorited = editFavSet.contains(schoolName);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this)
+                    .setTitle(schoolName)
                     .setMessage("电话：" + school.get(SchoolInfo.PHONE)
                             + "\n地址：" + school.get(SchoolInfo.ADDR)
                             + "\n官网：" + website)
                     .setPositiveButton("確定", null)
                     .setNegativeButton("打開官網", (dialog, which) -> {
-                        android.content.Intent intent = new android.content.Intent(
-                                MainActivity.this,
-                                SchoolWebViewActivity.class
-                        );
+                        Intent intent = new Intent(MainActivity.this, SchoolWebViewActivity.class);
                         intent.putExtra(SchoolWebViewActivity.EXTRA_WEBSITE, website);
                         startActivity(intent);
                     })
-                    .show();
+                    // 收藏按钮文字自动适配状态
+                    .setNeutralButton(isFavorited ? "取消收藏" : "加入收藏", (dialog, which) -> {
+                        // 编辑集合
+                        if (isFavorited) {
+                            editFavSet.remove(schoolName);
+                            Toast.makeText(MainActivity.this, "已取消收藏", Toast.LENGTH_SHORT).show();
+                        } else {
+                            editFavSet.add(schoolName);
+                            Toast.makeText(MainActivity.this, "收藏成功", Toast.LENGTH_SHORT).show();
+                        }
+
+                        // ========== 官方标准写入提交（谷歌教程原版） ==========
+                        SharedPreferences.Editor editor = mSharedPref.edit();
+                        editor.putStringSet(KEY_FAVORITE_SCHOOLS, editFavSet);
+                        editor.apply(); // 异步提交 官方推荐
+
+                        // 刷新列表 → 爱心立即同步更新
+                        applySearchAndFilter();
+                    });
+
+            builder.show();
         });
 
         // 2. 初始化地图
@@ -346,6 +383,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
                 LinearLayout cardLayout = view.findViewById(R.id.item_card_layout);
+
+                // 1. 绑定爱心控件
+                TextView tvFavoriteIcon = view.findViewById(R.id.tv_favorite_icon);
+                // 2. 获取当前行学校数据
+                HashMap<String, String> currentSchool = (HashMap<String, String>) getItem(position);
+                String schoolName = currentSchool.get(SchoolInfo.NAME);
+
+                // ========== 读取收藏集合 ==========
+                Set<String> favoriteSet = mSharedPref.getStringSet(KEY_FAVORITE_SCHOOLS, new HashSet<>());
+
+                // 3. 判断收藏状态，切换爱心（直观UI展示）
+                if (favoriteSet.contains(schoolName)) {
+                    tvFavoriteIcon.setText("❤️"); // 已收藏：实心红心
+                } else {
+                    tvFavoriteIcon.setText("🤍"); // 未收藏：空心爱心
+                }
 
                 // 奇偶行变色（你的原有效果）
                 if (position % 2 == 0) {
