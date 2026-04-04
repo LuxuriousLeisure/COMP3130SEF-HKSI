@@ -55,6 +55,13 @@
                 android:textSize="12sp"
                 android:layout_marginHorizontal="4dp"/>
 
+            <Button
+                android:id="@+id/filter_favorite"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:textSize="12sp"
+                android:layout_marginHorizontal="4dp"/>
+
         </LinearLayout>
     </HorizontalScrollView>
 
