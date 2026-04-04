@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String m_filterType = "";     // 學校類型：小學/中學
     private String m_filterGender = "";   // 學生性別：男女/男/女
     private String m_filterFinance = "";  // 資助種類：資助/官立/私立
+    private String m_filterFavorite = ""; // 收藏：全部/已收藏
 
     // 分页配置
     private static final int PAGE_SIZE = 20;
@@ -150,6 +151,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 m_filterFinance = selected.equals("全部") ? "" : selected;
                 btnFilterFinance.setText("資助種類 " + selected);
                 applySearchAndFilter();
+                return true;
+            });
+            popupMenu.show();
+        });
+
+        Button btnFilterFavorite = findViewById(R.id.filter_favorite);
+        btnFilterFavorite.setText("收藏 全部");
+        btnFilterFavorite.setOnClickListener(v -> {
+            PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterFavorite);
+            // 加载刚才新建的菜单文件
+            popupMenu.getMenuInflater().inflate(R.menu.menu_favorite, popupMenu.getMenu());
+
+            popupMenu.setOnMenuItemClickListener(item -> {
+                String selected = "";
+                int id = item.getItemId();
+                if (id == R.id.fav_all) selected = "全部";
+                else if (id == R.id.fav_favorited) selected = "已收藏";
+
+                m_filterFavorite = selected.equals("全部") ? "" : selected;
+                btnFilterFavorite.setText("收藏 " + selected);
+                applySearchAndFilter(); // 联动刷新
                 return true;
             });
             popupMenu.show();
@@ -260,6 +282,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         String keyword = etSearch.getText().toString().trim();
         SchoolInfo.schoolList.clear();
 
+        Set<String> favoriteSet = mSharedPref.getStringSet(KEY_FAVORITE_SCHOOLS, new HashSet<>());
+
+
         for (HashMap<String, String> school : allSchoolList) {
             // 1. 搜索匹配
 //            boolean matchName = keyword.isEmpty()
@@ -276,8 +301,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             boolean matchFinance = m_filterFinance.isEmpty()
                     || school.getOrDefault(SchoolInfo.FINANCE_TYPE, "").equals(m_filterFinance);
 
+            boolean matchFavorite = m_filterFavorite.isEmpty(); // 默认“全部”直接通过
+            if (!m_filterFavorite.isEmpty()) {
+                // 如果是“已收藏”，检查学校名是否在收藏集合中
+                String schoolName = school.get(SchoolInfo.NAME);
+                matchFavorite = favoriteSet.contains(schoolName);
+            }
+
             // 全部满足才显示
-            if (matchName && matchType && matchGender && matchFinance) {
+            if (matchName && matchType && matchGender && matchFinance && matchFavorite) {
                 SchoolInfo.schoolList.add(school);
             }
         }
