@@ -55,6 +55,13 @@
                 android:textSize="12sp"
                 android:layout_marginHorizontal="4dp"/>
 
+            <Button
+                android:id="@+id/filter_favorite"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:textSize="12sp"
+                android:layout_marginHorizontal="4dp"/>
+
         </LinearLayout>
     </HorizontalScrollView>
 
@@ -68,18 +75,27 @@
         app:layout_constraintBottom_toTopOf="@id/layout_pagination">
 
         <!-- 学校列表（左50%） -->
-        <ListView
-            android:id="@+id/list_view"
+<!--        <ListView-->
+<!--            android:id="@+id/list_view"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="match_parent"-->
+<!--            android:layout_weight="1"-->
+<!--            android:background="#ffffff"-->
+<!--            android:divider="#ffffff"-->
+<!--            android:dividerHeight="16dp"-->
+<!--            android:clipToPadding="false"-->
+<!--            android:paddingLeft="16dp"-->
+<!--            android:paddingRight="16dp"-->
+<!--            android:scrollbarStyle="outsideInset"/>-->
+        <com.yanzhenjie.recyclerview.SwipeRecyclerView
+            android:id="@+id/recycler_view"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="#ffffff"
-            android:divider="#ffffff"
-            android:dividerHeight="16dp"
             android:clipToPadding="false"
             android:paddingLeft="16dp"
-            android:paddingRight="16dp"
-            android:scrollbarStyle="outsideInset"/>
+            android:paddingRight="16dp" />
 
         <!-- 地图（右50%） -->
         <fragment

@@ -11,14 +11,14 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -26,6 +26,10 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.yanzhenjie.recyclerview.SwipeMenuCreator;
+import com.yanzhenjie.recyclerview.SwipeMenuItem;
+import com.yanzhenjie.recyclerview.SwipeRecyclerView;
+import com.yanzhenjie.recyclerview.OnItemMenuClickListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,19 +37,23 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-// 1. 实现 OnMapReadyCallback 接口
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
-    private ListView listView;
+
+    // ====================== 替换：ListView → SwipeRecyclerView ======================
+    private SwipeRecyclerView mRecyclerView;
+    private SchoolAdapter mAdapter;
+
     private EditText etSearch;
     private TextView tvEmpty;
 
     // 地图相关变量
     private GoogleMap mMap;
 
-    // ====================== 筛选变量（3个条件） ======================
-    private String m_filterType = "";     // 學校類型：小學/中學
-    private String m_filterGender = "";   // 學生性別：男女/男/女
-    private String m_filterFinance = "";  // 資助種類：資助/官立/私立
+    // 筛选变量
+    private String m_filterType = "";
+    private String m_filterGender = "";
+    private String m_filterFinance = "";
+    private String m_filterFavorite = "";
 
     // 分页配置
     private static final int PAGE_SIZE = 20;
@@ -56,9 +64,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Button btnPrev, btnNext;
     private Button[] pageBtns = new Button[5];
 
-    // 搜索+筛选用：保存全部原始数据
+    // 数据集合
     private List<HashMap<String, String>> allSchoolList = new ArrayList<>();
 
+    // 收藏持久化
     private SharedPreferences mSharedPref;
     private static final String KEY_FAVORITE_SCHOOLS = "favorite_school_set";
 
@@ -68,12 +77,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
 
         mSharedPref = getApplicationContext().getSharedPreferences(
-                "SchoolFavoritePref",  // 配置文件名
-                Context.MODE_PRIVATE   // 私有模式
+                "SchoolFavoritePref",
+                Context.MODE_PRIVATE
         );
 
-        // 绑定控件
-        listView = findViewById(R.id.list_view);
+        // ====================== 绑定控件：删除旧ListView ======================
         etSearch = findViewById(R.id.et_search);
         btnPrev = findViewById(R.id.btn_prev);
         btnNext = findViewById(R.id.btn_next);
@@ -84,17 +92,21 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         pageBtns[3] = findViewById(R.id.page_btn4);
         pageBtns[4] = findViewById(R.id.page_btn5);
 
-        // ====================== 绑定筛选按钮 ======================
+        // 绑定新RecyclerView
+        mRecyclerView = findViewById(R.id.recycler_view);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        // ====================== 筛选按钮（完全保留原有逻辑） ======================
         Button btnFilterType = findViewById(R.id.filter_type);
         Button btnFilterGender = findViewById(R.id.filter_gender);
         Button btnFilterFinance = findViewById(R.id.filter_finance);
+        Button btnFilterFavorite = findViewById(R.id.filter_favorite);
 
-        // 1. 学校类型筛选
+        // 学校类型筛选
         btnFilterType.setText("學校類型 全部");
         btnFilterType.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterType);
             popupMenu.getMenuInflater().inflate(R.menu.menu_school_type, popupMenu.getMenu());
-
             popupMenu.setOnMenuItemClickListener(item -> {
                 String selected = "";
                 int id = item.getItemId();
@@ -111,12 +123,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             popupMenu.show();
         });
 
-        // 2. 学生性别筛选
+        // 学生性别筛选
         btnFilterGender.setText("學生性別 全部");
         btnFilterGender.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterGender);
             popupMenu.getMenuInflater().inflate(R.menu.menu_gender, popupMenu.getMenu());
-
             popupMenu.setOnMenuItemClickListener(item -> {
                 String selected = "";
                 int id = item.getItemId();
@@ -133,12 +144,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             popupMenu.show();
         });
 
-        // 3. 资助种类筛选
+        // 资助种类筛选
         btnFilterFinance.setText("資助種類 全部");
         btnFilterFinance.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterFinance);
             popupMenu.getMenuInflater().inflate(R.menu.menu_finance, popupMenu.getMenu());
-
             popupMenu.setOnMenuItemClickListener(item -> {
                 String selected = "";
                 int id = item.getItemId();
@@ -155,7 +165,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             popupMenu.show();
         });
 
-        // 拉取JSON数据
+        // 收藏筛选
+        btnFilterFavorite.setText("收藏 全部");
+        btnFilterFavorite.setOnClickListener(v -> {
+            PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterFavorite);
+            popupMenu.getMenuInflater().inflate(R.menu.menu_favorite, popupMenu.getMenu());
+            popupMenu.setOnMenuItemClickListener(item -> {
+                String selected = "";
+                int id = item.getItemId();
+                if (id == R.id.fav_all) selected = "全部";
+                else if (id == R.id.fav_favorited) selected = "已收藏";
+
+                m_filterFavorite = selected.equals("全部") ? "" : selected;
+                btnFilterFavorite.setText("收藏 " + selected);
+                applySearchAndFilter();
+                return true;
+            });
+            popupMenu.show();
+        });
+
+        // 拉取JSON数据（不变）
         JsonHandlerThread thread = new JsonHandlerThread();
         thread.start();
         try {
@@ -164,68 +193,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             e.printStackTrace();
         }
 
-        // 保存全部原始数据
         allSchoolList.addAll(SchoolInfo.schoolList);
-
-        // 计算总页数
         int totalSize = SchoolInfo.schoolList.size();
         totalPage = (totalSize + PAGE_SIZE - 1) / PAGE_SIZE;
 
-        // 初始化事件
         initPageEvent();
         initSearchEvent();
 
-        // 首次加载
+        initSwipeMenu();
+        initRecyclerItemClick();
+
         refreshList();
         refreshPageButtons();
 
-        // 列表点击弹窗（原有功能完全保留）
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            HashMap<String,String> school = getCurrentPageData().get(position);
-            String schoolName = school.get(SchoolInfo.NAME);
-            String website = school.get(SchoolInfo.WEBSITE);
-
-            // 【官方规范】读取收藏集合
-            Set<String> originFavSet = mSharedPref.getStringSet(KEY_FAVORITE_SCHOOLS, new HashSet<>());
-            // 必须复制新集合（谷歌强制要求：不可修改原生返回的Set）
-            HashSet<String> editFavSet = new HashSet<>(originFavSet);
-            boolean isFavorited = editFavSet.contains(schoolName);
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this)
-                    .setTitle(schoolName)
-                    .setMessage("电话：" + school.get(SchoolInfo.PHONE)
-                            + "\n地址：" + school.get(SchoolInfo.ADDR)
-                            + "\n官网：" + website)
-                    .setPositiveButton("確定", null)
-                    .setNegativeButton("打開官網", (dialog, which) -> {
-                        Intent intent = new Intent(MainActivity.this, SchoolWebViewActivity.class);
-                        intent.putExtra(SchoolWebViewActivity.EXTRA_WEBSITE, website);
-                        startActivity(intent);
-                    })
-                    // 收藏按钮文字自动适配状态
-                    .setNeutralButton(isFavorited ? "取消收藏" : "加入收藏", (dialog, which) -> {
-                        // 编辑集合
-                        if (isFavorited) {
-                            editFavSet.remove(schoolName);
-                            Toast.makeText(MainActivity.this, "已取消收藏", Toast.LENGTH_SHORT).show();
-                        } else {
-                            editFavSet.add(schoolName);
-                            Toast.makeText(MainActivity.this, "收藏成功", Toast.LENGTH_SHORT).show();
-                        }
-
-                        // ========== 官方标准写入提交（谷歌教程原版） ==========
-                        SharedPreferences.Editor editor = mSharedPref.edit();
-                        editor.putStringSet(KEY_FAVORITE_SCHOOLS, editFavSet);
-                        editor.apply(); // 异步提交 官方推荐
-
-                        // 刷新列表 → 爱心立即同步更新
-                        applySearchAndFilter();
-                    });
-
-            builder.show();
-        });
-
-        // 2. 初始化地图
+        // 初始化地图（不变）
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         if (mapFragment != null) {
@@ -233,42 +214,117 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    // 3. 实现地图回调方法
+    // ====================== 侧滑菜单初始化 ======================
+    private void initSwipeMenu() {
+        SwipeMenuCreator menuCreator = (leftMenu, rightMenu, position) -> {
+            int width = getResources().getDisplayMetrics().widthPixels / 4;
+            HashMap<String, String> school = getCurrentPageData().get(position);
+            boolean isFavorited = mSharedPref.getStringSet(KEY_FAVORITE_SCHOOLS, new HashSet<>())
+                    .contains(school.get(SchoolInfo.NAME));
+
+            // 收藏按钮
+            SwipeMenuItem favItem = new SwipeMenuItem(this)
+                    .setBackgroundColor(isFavorited ? 0xFFFF4444 : 0xFF4CAF50)
+                    .setText(isFavorited ? "取消收藏" : "加入收藏")
+                    .setTextColor(0xFFFFFFFF)
+                    .setWidth(width)
+                    .setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+            rightMenu.addMenuItem(favItem);
+
+            // 详情按钮
+            SwipeMenuItem infoItem = new SwipeMenuItem(this)
+                    .setBackgroundColor(0xFF2196F3)
+                    .setText("ℹ️ 詳情")
+                    .setTextColor(0xFFFFFFFF)
+                    .setWidth(width)
+                    .setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
+            rightMenu.addMenuItem(infoItem);
+        };
+        mRecyclerView.setSwipeMenuCreator(menuCreator);
+
+        // 侧滑按钮点击事件
+        mRecyclerView.setOnItemMenuClickListener((menuBridge, adapterPosition) -> {
+            menuBridge.closeMenu();
+            HashMap<String, String> school = getCurrentPageData().get(adapterPosition);
+            String schoolName = school.get(SchoolInfo.NAME);
+
+            if (menuBridge.getPosition() == 0) {
+                // 收藏/取消收藏
+                Set<String> originSet = mSharedPref.getStringSet(KEY_FAVORITE_SCHOOLS, new HashSet<>());
+                HashSet<String> editSet = new HashSet<>(originSet);
+                if (editSet.contains(schoolName)) {
+                    editSet.remove(schoolName);
+                    Toast.makeText(this, "已取消收藏", Toast.LENGTH_SHORT).show();
+                } else {
+                    editSet.add(schoolName);
+                    Toast.makeText(this, "收藏成功", Toast.LENGTH_SHORT).show();
+                }
+                mSharedPref.edit().putStringSet(KEY_FAVORITE_SCHOOLS, editSet).apply();
+                applySearchAndFilter();
+            } else {
+                // 详情弹窗（无收藏按钮）
+                new AlertDialog.Builder(this)
+                        .setTitle(schoolName)
+                        .setMessage("电话：" + school.get(SchoolInfo.PHONE)
+                                + "\n地址：" + school.get(SchoolInfo.ADDR)
+                                + "\n官网：" + school.get(SchoolInfo.WEBSITE))
+                        .setPositiveButton("確定", null)
+                        .setNegativeButton("打開官網", (dialog, which) -> {
+                            Intent intent = new Intent(this, SchoolWebViewActivity.class);
+                            intent.putExtra(SchoolWebViewActivity.EXTRA_WEBSITE, school.get(SchoolInfo.WEBSITE));
+                            startActivity(intent);
+                        }).show();
+            }
+        });
+    }
+
+    // ====================== 列表点击→地图居中 ======================
+    private void initRecyclerItemClick() {
+        mRecyclerView.setOnItemClickListener((view, position) -> {
+            if (mMap == null) return;
+            HashMap<String, String> school = getCurrentPageData().get(position);
+            try {
+                double lat = Double.parseDouble(school.get(SchoolInfo.LATITUDE));
+                double lng = Double.parseDouble(school.get(SchoolInfo.LONGITUDE));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lat, lng), 16));
+            } catch (Exception e) {
+                Toast.makeText(this, "無有效經緯度資料", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    // 地图就绪（不变）
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
         refreshMapMarkers();
     }
 
-    // ====================== 搜索监听 ======================
+    // 搜索监听（不变）
     private void initSearchEvent() {
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                applySearchAndFilter(); // 搜索+筛选联动
+                applySearchAndFilter();
             }
             @Override
             public void afterTextChanged(Editable s) {}
         });
     }
 
-    // ====================== 核心：搜索 + 筛选 同时生效 ======================
+    // 搜索+筛选（仅修改空数据控件）
     private void applySearchAndFilter() {
         String keyword = etSearch.getText().toString().trim();
         SchoolInfo.schoolList.clear();
+        Set<String> favoriteSet = mSharedPref.getStringSet(KEY_FAVORITE_SCHOOLS, new HashSet<>());
 
         for (HashMap<String, String> school : allSchoolList) {
-            // 1. 搜索匹配
-//            boolean matchName = keyword.isEmpty()
-//                    || school.get(SchoolInfo.NAME).contains(keyword);
             boolean matchName = keyword.isEmpty()
                     || (school.get(SchoolInfo.NAME) != null && school.get(SchoolInfo.NAME).contains(keyword))
                     || (school.get(SchoolInfo.NAME_EN) != null && school.get(SchoolInfo.NAME_EN).contains(keyword));
 
-            // 2. 筛选匹配（使用重命名后的变量）
             boolean matchType = m_filterType.isEmpty()
                     || school.getOrDefault(SchoolInfo.SCHOOL_LEVEL, "").equals(m_filterType);
             boolean matchGender = m_filterGender.isEmpty()
@@ -276,22 +332,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             boolean matchFinance = m_filterFinance.isEmpty()
                     || school.getOrDefault(SchoolInfo.FINANCE_TYPE, "").equals(m_filterFinance);
 
-            // 全部满足才显示
-            if (matchName && matchType && matchGender && matchFinance) {
+            boolean matchFavorite = m_filterFavorite.isEmpty();
+            if (!m_filterFavorite.isEmpty()) {
+                matchFavorite = favoriteSet.contains(school.get(SchoolInfo.NAME));
+            }
+
+            if (matchName && matchType && matchGender && matchFinance && matchFavorite) {
                 SchoolInfo.schoolList.add(school);
             }
         }
 
-        // 空结果判断
+        // ====================== 替换：ListView → RecyclerView ======================
         if (SchoolInfo.schoolList.isEmpty()) {
-            listView.setVisibility(View.GONE);
+            mRecyclerView.setVisibility(View.GONE);
             tvEmpty.setVisibility(View.VISIBLE);
         } else {
-            listView.setVisibility(View.VISIBLE);
+            mRecyclerView.setVisibility(View.VISIBLE);
             tvEmpty.setVisibility(View.GONE);
         }
 
-        // 重置分页
         currentPage = 1;
         totalPage = (SchoolInfo.schoolList.size() + PAGE_SIZE - 1) / PAGE_SIZE;
         refreshList();
@@ -299,42 +358,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         refreshMapMarkers();
     }
 
+    // 地图标记（不变）
     private void refreshMapMarkers() {
-        // 如果地图还没准备好，就不执行
         if (mMap == null) return;
-
-        // 1. 清空地图上旧的 Marker
         mMap.clear();
 
-        // 2. 遍历当前符合条件的所有学校（注意：我们在地图上展示所有符合条件的学校，而不是只展示当前页的 20 个，这样体验更好）
         for (HashMap<String, String> school : SchoolInfo.schoolList) {
             try {
                 String latStr = school.get(SchoolInfo.LATITUDE);
                 String lngStr = school.get(SchoolInfo.LONGITUDE);
-
-                if (latStr != null && lngStr != null && !latStr.isEmpty() && !lngStr.isEmpty()) {
+                if (latStr != null && lngStr != null) {
                     double lat = Double.parseDouble(latStr);
                     double lng = Double.parseDouble(lngStr);
                     LatLng location = new LatLng(lat, lng);
-
-                    // 添加标记
                     mMap.addMarker(new MarkerOptions()
                             .position(location)
                             .title(school.get(SchoolInfo.NAME))
                             .snippet("電話: " + school.get(SchoolInfo.PHONE)));
                 }
-            } catch (NumberFormatException e) {
-                // 防止某些数据经纬度格式异常导致崩溃
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        // 3. (可选) 自动调整摄像头位置：如果列表有数据，将镜头移动到第一个学校的位置
         if (!SchoolInfo.schoolList.isEmpty()) {
             try {
                 double firstLat = Double.parseDouble(SchoolInfo.schoolList.get(0).get(SchoolInfo.LATITUDE));
                 double firstLng = Double.parseDouble(SchoolInfo.schoolList.get(0).get(SchoolInfo.LONGITUDE));
-                // 移动镜头，Zoom 参数可根据需要调整 (如 11 适合看全港，14 适合看街区)
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(firstLat, firstLng), 12));
             } catch (Exception e) {
                 e.printStackTrace();
@@ -342,7 +392,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    // ====================== 分页功能（完全不变） ======================
+    // 分页事件（不变）
     private void initPageEvent() {
         btnPrev.setOnClickListener(v -> {
             if (currentPage > 1) {
@@ -362,80 +412,44 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         for (Button btn : pageBtns) {
             btn.setOnClickListener(v -> {
-                String pageText = ((Button) v).getText().toString();
-                currentPage = Integer.parseInt(pageText);
+                currentPage = Integer.parseInt(((Button) v).getText().toString());
                 refreshList();
                 refreshPageButtons();
             });
         }
     }
 
-    // ====================== 刷新列表（奇偶变色保留） ======================
+    // ====================== 替换：RecyclerView刷新列表 ======================
     private void refreshList() {
-        SimpleAdapter adapter = new SimpleAdapter(
-                this,
-                getCurrentPageData(),
-                R.layout.list_item_school,
-                new String[]{SchoolInfo.NAME, SchoolInfo.DISTRICT, SchoolInfo.PHONE},
-                new int[]{R.id.tv_name, R.id.tv_district, R.id.tv_phone}
-        ) {
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                View view = super.getView(position, convertView, parent);
-                LinearLayout cardLayout = view.findViewById(R.id.item_card_layout);
+        Set<String> favSet = mSharedPref.getStringSet(KEY_FAVORITE_SCHOOLS, new HashSet<>());
+        List<HashMap<String, String>> currentPageData = getCurrentPageData();
 
-                // 1. 绑定爱心控件
-                TextView tvFavoriteIcon = view.findViewById(R.id.tv_favorite_icon);
-                // 2. 获取当前行学校数据
-                HashMap<String, String> currentSchool = (HashMap<String, String>) getItem(position);
-                String schoolName = currentSchool.get(SchoolInfo.NAME);
-
-                // ========== 读取收藏集合 ==========
-                Set<String> favoriteSet = mSharedPref.getStringSet(KEY_FAVORITE_SCHOOLS, new HashSet<>());
-
-                // 3. 判断收藏状态，切换爱心（直观UI展示）
-                if (favoriteSet.contains(schoolName)) {
-                    tvFavoriteIcon.setText("❤️"); // 已收藏：实心红心
-                } else {
-                    tvFavoriteIcon.setText("🤍"); // 未收藏：空心爱心
-                }
-
-                // 奇偶行变色（你的原有效果）
-                if (position % 2 == 0) {
-                    cardLayout.setBackgroundResource(R.drawable.rounded_item_white);
-                } else {
-                    cardLayout.setBackgroundResource(R.drawable.rounded_item_gray);
-                }
-                return view;
-            }
-        };
-        listView.setAdapter(adapter);
+        if (mAdapter == null) {
+            mAdapter = new SchoolAdapter(currentPageData, favSet);
+            mRecyclerView.setAdapter(mAdapter);
+        } else {
+            // 先更新适配器内部引用的数据源，再通知刷新
+            mAdapter.updateData(currentPageData, favSet);
+            mAdapter.notifyDataSetChanged();
+        }
     }
 
-    // ====================== 获取分页数据（不变） ======================
+    // 分页数据（不变）
     private List<HashMap<String, String>> getCurrentPageData() {
         List<HashMap<String, String>> pageList = new ArrayList<>();
         int start = (currentPage - 1) * PAGE_SIZE;
-        int end = start + PAGE_SIZE;
-
-        if (end > SchoolInfo.schoolList.size()) {
-            end = SchoolInfo.schoolList.size();
-        }
-
+        int end = Math.min(start + PAGE_SIZE, SchoolInfo.schoolList.size());
         for (int i = start; i < end; i++) {
             pageList.add(SchoolInfo.schoolList.get(i));
         }
         return pageList;
     }
 
-    // ====================== 页码按钮刷新（不变） ======================
+    // 页码刷新（不变）
     private void refreshPageButtons() {
-        int startPage = currentPage - 2;
-        if (startPage < 1) startPage = 1;
-
+        int startPage = Math.max(1, currentPage - 2);
         for (int i = 0; i < 5; i++) {
             int pageNum = startPage + i;
-
             if (pageNum > totalPage) {
                 pageBtns[i].setVisibility(View.GONE);
             } else {
@@ -449,6 +463,68 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     pageBtns[i].setBackgroundColor(getResources().getColor(android.R.color.white));
                     pageBtns[i].setTextColor(getResources().getColor(android.R.color.black));
                 }
+            }
+        }
+    }
+
+    // ====================== 新增：自定义RecyclerView适配器 ======================
+    private class SchoolAdapter extends RecyclerView.Adapter<SchoolAdapter.ViewHolder> {
+        private List<HashMap<String, String>> mData;
+        private Set<String> mFavoriteSet;
+
+        public SchoolAdapter(List<HashMap<String, String>> data, Set<String> favoriteSet) {
+            this.mData = data;
+            this.mFavoriteSet = favoriteSet;
+        }
+
+        @androidx.annotation.NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@androidx.annotation.NonNull ViewGroup parent, int viewType) {
+            View view = getLayoutInflater().inflate(R.layout.list_item_school, parent, false);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@androidx.annotation.NonNull ViewHolder holder, int position) {
+            HashMap<String, String> school = mData.get(position);
+            String schoolName = school.get(SchoolInfo.NAME);
+
+            holder.tvName.setText(schoolName);
+            holder.tvDistrict.setText(school.get(SchoolInfo.DISTRICT));
+            holder.tvPhone.setText(school.get(SchoolInfo.PHONE));
+
+            // 收藏爱心状态
+            holder.tvFavoriteIcon.setText(mFavoriteSet.contains(schoolName) ? "❤️" : "🤍");
+
+            // 奇偶行变色
+            if (position % 2 == 0) {
+                holder.cardLayout.setBackgroundResource(R.drawable.rounded_item_white);
+            } else {
+                holder.cardLayout.setBackgroundResource(R.drawable.rounded_item_gray);
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            return mData == null ? 0 : mData.size();
+        }
+
+        public void updateData(List<HashMap<String, String>> newData, Set<String> newFavSet) {
+            this.mData = newData;
+            this.mFavoriteSet = newFavSet;
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            TextView tvName, tvDistrict, tvPhone, tvFavoriteIcon;
+            LinearLayout cardLayout;
+
+            public ViewHolder(View itemView) {
+                super(itemView);
+                tvName = itemView.findViewById(R.id.tv_name);
+                tvDistrict = itemView.findViewById(R.id.tv_district);
+                tvPhone = itemView.findViewById(R.id.tv_phone);
+                tvFavoriteIcon = itemView.findViewById(R.id.tv_favorite_icon);
+                cardLayout = itemView.findViewById(R.id.item_card_layout);
             }
         }
     }
