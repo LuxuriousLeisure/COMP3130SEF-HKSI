@@ -30,4 +30,13 @@
     <string name="finance_private">私立</string>
     <string name="fav_done">已收藏</string>
     <string name="toast_selected">選中：</string>
+
+    <string name="label_type">學校類型：</string>
+    <string name="label_gender">學生性別：</string>
+    <string name="label_finance">資助種類：</string>
+    <string name="label_religion">宗教：</string>
+    <string name="label_session">授課時間：</string>
+
+    <string name="toast_fav">收藏成功</string>
+    <string name="toast_unfav">已取消收藏</string>
 </resources>

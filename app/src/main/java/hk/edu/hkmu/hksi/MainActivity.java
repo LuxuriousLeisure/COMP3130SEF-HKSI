@@ -281,7 +281,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             int width = getResources().getDisplayMetrics().widthPixels / 4;
             HashMap<String, String> school = getCurrentPageData().get(position);
             boolean isFavorited = mSharedPref.getStringSet(KEY_FAVORITE_SCHOOLS, new HashSet<>())
-                    .contains(school.get(SchoolInfo.NAME));
+                    .contains(school.get(SchoolInfo.NAME_CN));
 
             // 收藏按钮
             SwipeMenuItem favItem = new SwipeMenuItem(this)
@@ -306,36 +306,47 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mRecyclerView.setSwipeMenuCreator(menuCreator);
 
         // 侧滑按钮点击事件
+        // 侧滑按钮点击事件
         mRecyclerView.setOnItemMenuClickListener((menuBridge, adapterPosition) -> {
             menuBridge.closeMenu();
             HashMap<String, String> school = getCurrentPageData().get(adapterPosition);
-            String schoolName = school.get(SchoolInfo.NAME);
+
+            // ====================== 修复开始 ======================
+            String schoolNameCn = school.get(SchoolInfo.NAME_CN); // 用于收藏/取消收藏（固定）
+            String schoolNameUi = school.get(SchoolInfo.getNameKey()); // 用于弹窗标题（随语言变）
+            // ====================== 修复结束 ======================
 
             if (menuBridge.getPosition() == 0) {
                 // 收藏/取消收藏
                 Set<String> originSet = mSharedPref.getStringSet(KEY_FAVORITE_SCHOOLS, new HashSet<>());
                 HashSet<String> editSet = new HashSet<>(originSet);
-                if (editSet.contains(schoolName)) {
-                    editSet.remove(schoolName);
-                    Toast.makeText(this, "已取消收藏", Toast.LENGTH_SHORT).show();
+
+                // ====================== 修复：用 schoolNameCn ======================
+                if (editSet.contains(schoolNameCn)) {
+                    editSet.remove(schoolNameCn);
+                    Toast.makeText(this, getString(R.string.toast_unfav), Toast.LENGTH_SHORT).show();
                 } else {
-                    editSet.add(schoolName);
-                    Toast.makeText(this, "收藏成功", Toast.LENGTH_SHORT).show();
+                    editSet.add(schoolNameCn);
+                    Toast.makeText(this, getString(R.string.toast_fav), Toast.LENGTH_SHORT).show();
                 }
+                // ====================== 修复结束 ======================
+
                 mSharedPref.edit().putStringSet(KEY_FAVORITE_SCHOOLS, editSet).apply();
                 applySearchAndFilter();
             } else {
-                // 详情弹窗（无收藏按钮）
+                // 详情弹窗
                 new AlertDialog.Builder(this)
-                        .setTitle(schoolName)
-//                        .setMessage("电话：" + school.get(SchoolInfo.PHONE)
-//                                + "\n地址：" + school.get(SchoolInfo.ADDR)
-//                                + "\n官网：" + school.get(SchoolInfo.WEBSITE))
-//                        .setPositiveButton("確定", null)
-//                        .setNegativeButton("打開官網", (dialog, which) -> {
-                        .setMessage(getString(R.string.label_phone) + school.get(SchoolInfo.PHONE) // 建议在xml也定义label_phone
-                                + "\n" + getString(R.string.label_addr) + school.get(SchoolInfo.ADDR)
-                                + "\n" + getString(R.string.label_web) + school.get(SchoolInfo.WEBSITE))
+                        // ====================== 修复：用 schoolNameUi ======================
+                        .setTitle(schoolNameUi)
+                        // ====================== 修复结束 ======================
+                        .setMessage(getString(R.string.label_phone) + school.get(SchoolInfo.PHONE)
+                                + "\n" + getString(R.string.label_addr) + school.get(SchoolInfo.getAddrKey())
+                                + "\n\n" + getString(R.string.label_type) + school.get(SchoolInfo.getSchoolLevelKey()) // 学校类型
+                                + "\n" + getString(R.string.label_gender) + school.get(SchoolInfo.getGenderKey())     // 学生性别
+                                + "\n" + getString(R.string.label_finance) + school.get(SchoolInfo.getFinanceKey())   // 资助种类
+                                + "\n" + getString(R.string.label_religion) + school.get(SchoolInfo.getReligionKey()) // 宗教
+                                + "\n" + getString(R.string.label_session) + school.get(SchoolInfo.getSessionKey())   // 授课时间
+                                + "\n\n" + getString(R.string.label_web) + school.get(SchoolInfo.WEBSITE))
                         .setPositiveButton(getString(R.string.confirm), null)
                         .setNegativeButton(getString(R.string.school_website), (dialog, which) -> {
                             Intent intent = new Intent(this, SchoolWebViewActivity.class);
@@ -389,20 +400,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Set<String> favoriteSet = mSharedPref.getStringSet(KEY_FAVORITE_SCHOOLS, new HashSet<>());
 
         for (HashMap<String, String> school : allSchoolList) {
+            // 核心：同时匹配中文名+英文名，实现中英文搜索
             boolean matchName = keyword.isEmpty()
-                    || (school.get(SchoolInfo.NAME) != null && school.get(SchoolInfo.NAME).contains(keyword))
+                    || (school.get(SchoolInfo.NAME_CN) != null && school.get(SchoolInfo.NAME_CN).contains(keyword))
                     || (school.get(SchoolInfo.NAME_EN) != null && school.get(SchoolInfo.NAME_EN).contains(keyword));
 
+            // 筛选逻辑不变，固定用中文key匹配，保证稳定
             boolean matchType = m_filterType.isEmpty()
-                    || school.getOrDefault(SchoolInfo.SCHOOL_LEVEL, "").equals(m_filterType);
+                    || school.getOrDefault(SchoolInfo.SCHOOL_LEVEL_CN, "").equals(m_filterType);
             boolean matchGender = m_filterGender.isEmpty()
-                    || school.getOrDefault(SchoolInfo.STUDENTS_GENDER, "").equals(m_filterGender);
+                    || school.getOrDefault(SchoolInfo.STUDENTS_GENDER_CN, "").equals(m_filterGender);
             boolean matchFinance = m_filterFinance.isEmpty()
-                    || school.getOrDefault(SchoolInfo.FINANCE_TYPE, "").equals(m_filterFinance);
+                    || school.getOrDefault(SchoolInfo.FINANCE_TYPE_CN, "").equals(m_filterFinance);
 
+            // 收藏匹配：固定用中文名做唯一标识，切换语言不丢失收藏
             boolean matchFavorite = m_filterFavorite.isEmpty();
             if (!m_filterFavorite.isEmpty()) {
-                matchFavorite = favoriteSet.contains(school.get(SchoolInfo.NAME));
+                matchFavorite = favoriteSet.contains(school.get(SchoolInfo.NAME_CN));
             }
 
             if (matchName && matchType && matchGender && matchFinance && matchFavorite) {
@@ -410,7 +424,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
 
-        // ====================== 替换：ListView → RecyclerView ======================
+        // 空数据处理不变
         if (SchoolInfo.schoolList.isEmpty()) {
             mRecyclerView.setVisibility(View.GONE);
             tvEmpty.setVisibility(View.VISIBLE);
@@ -441,8 +455,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     LatLng location = new LatLng(lat, lng);
                     mMap.addMarker(new MarkerOptions()
                             .position(location)
-                            .title(school.get(SchoolInfo.NAME))
-                            .snippet("電話: " + school.get(SchoolInfo.PHONE)));
+                            .title(school.get(SchoolInfo.getNameKey())) // 标题随语言切换
+                            .snippet(getString(R.string.label_phone) + school.get(SchoolInfo.PHONE)));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -555,16 +569,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         public void onBindViewHolder(@androidx.annotation.NonNull ViewHolder holder, int position) {
             HashMap<String, String> school = mData.get(position);
-            String schoolName = school.get(SchoolInfo.NAME);
 
-            holder.tvName.setText(schoolName);
-            holder.tvDistrict.setText(school.get(SchoolInfo.DISTRICT));
+            // ============== 核心修改：自动切换语言 ==============
+            // 学校名称：自动中文/英文
+            holder.tvName.setText(school.get(SchoolInfo.getNameKey()));
+            // 地区：自动中文/英文
+            holder.tvDistrict.setText(school.get(SchoolInfo.getDistrictKey()));
+            // 电话（无需切换）
             holder.tvPhone.setText(school.get(SchoolInfo.PHONE));
 
-            // 收藏爱心状态
-            holder.tvFavoriteIcon.setText(mFavoriteSet.contains(schoolName) ? "❤️" : "🤍");
+            // ============== 收藏状态（固定中文名，不丢收藏） ==============
+            String schoolNameCn = school.get(SchoolInfo.NAME_CN);
+            holder.tvFavoriteIcon.setText(mFavoriteSet.contains(schoolNameCn) ? "❤️" : "🤍");
 
-            // 奇偶行变色
+            // 奇偶行背景色（保持不变）
             if (position % 2 == 0) {
                 holder.cardLayout.setBackgroundResource(R.drawable.rounded_item_white);
             } else {

@@ -30,4 +30,13 @@
     <string name="finance_private">Private</string>
     <string name="fav_done">Favorited</string>
     <string name="toast_selected">Selected: </string>
+
+    <string name="label_type">School Type: </string>
+    <string name="label_gender">Student Gender: </string>
+    <string name="label_finance">Finance Type: </string>
+    <string name="label_religion">Religion: </string>
+    <string name="label_session">Session: </string>
+
+    <string name="toast_fav">Added to favorites</string>
+    <string name="toast_unfav">Removed from favorites</string>
 </resources>
