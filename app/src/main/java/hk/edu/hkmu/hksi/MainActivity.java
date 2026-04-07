@@ -3,7 +3,10 @@ package hk.edu.hkmu.hksi;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.LocaleList;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
@@ -30,11 +33,13 @@ import com.yanzhenjie.recyclerview.SwipeMenuCreator;
 import com.yanzhenjie.recyclerview.SwipeMenuItem;
 import com.yanzhenjie.recyclerview.SwipeRecyclerView;
 import com.yanzhenjie.recyclerview.OnItemMenuClickListener;
+import android.content.res.Configuration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -73,6 +78,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+//        SharedPreferences prefs = getSharedPreferences("Settings", MODE_PRIVATE);
+//        String language = prefs.getString("My_Lang", "zh-rHK");
+//        applyLocale(language);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -103,41 +113,59 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         Button btnFilterFavorite = findViewById(R.id.filter_favorite);
 
         // 学校类型筛选
-        btnFilterType.setText("學校類型 全部");
+//        btnFilterType.setText("學校類型 全部");
+        btnFilterType.setText(getString(R.string.filter_type_label) + getString(R.string.all));
+
+
         btnFilterType.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterType);
             popupMenu.getMenuInflater().inflate(R.menu.menu_school_type, popupMenu.getMenu());
             popupMenu.setOnMenuItemClickListener(item -> {
                 String selected = "";
                 int id = item.getItemId();
-                if (id == R.id.option_all) selected = "全部";
-                else if (id == R.id.option_primary) selected = "小學";
-                else if (id == R.id.option_middle) selected = "中學";
+                if (id == R.id.option_all) {
+                    selected = getString(R.string.all);
+                    m_filterType = "";
+                } else if (id == R.id.option_primary) {
+                    selected = getString(R.string.option_primary);
+                    m_filterType = "小學"; // 数据库/API通常固定为中文，这里需匹配API数据源
+                } else if (id == R.id.option_middle) {
+                    selected = getString(R.string.option_middle);
+                    m_filterType = "中學";
+                }
 
-                m_filterType = selected.equals("全部") ? "" : selected;
-                btnFilterType.setText("學校類型 " + selected);
+                btnFilterType.setText(getString(R.string.filter_type_label) + " " + selected);
                 applySearchAndFilter();
-                Toast.makeText(this, "选中：" + selected, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.toast_selected) + selected, Toast.LENGTH_SHORT).show();
                 return true;
             });
             popupMenu.show();
         });
 
         // 学生性别筛选
-        btnFilterGender.setText("學生性別 全部");
+//        btnFilterGender.setText("學生性別 全部");
+        btnFilterGender.setText(getString(R.string.filter_gender_label) + getString(R.string.all));
         btnFilterGender.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterGender);
             popupMenu.getMenuInflater().inflate(R.menu.menu_gender, popupMenu.getMenu());
             popupMenu.setOnMenuItemClickListener(item -> {
                 String selected = "";
                 int id = item.getItemId();
-                if (id == R.id.gender_all) selected = "全部";
-                else if (id == R.id.gender_mix) selected = "男女";
-                else if (id == R.id.gender_male) selected = "男";
-                else if (id == R.id.gender_female) selected = "女";
+                if (id == R.id.gender_all) {
+                    selected = getString(R.string.all);
+                    m_filterGender = "";
+                } else if (id == R.id.gender_mix) {
+                    selected = getString(R.string.gender_mix);
+                    m_filterGender = "男女";
+                } else if (id == R.id.gender_male) {
+                    selected = getString(R.string.gender_male);
+                    m_filterGender = "男";
+                } else if (id == R.id.gender_female) {
+                    selected = getString(R.string.gender_female);
+                    m_filterGender = "女";
+                }
 
-                m_filterGender = selected.equals("全部") ? "" : selected;
-                btnFilterGender.setText("學生性別 " + selected);
+                btnFilterGender.setText(getString(R.string.filter_gender_label) + " " + selected);
                 applySearchAndFilter();
                 return true;
             });
@@ -145,20 +173,29 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
 
         // 资助种类筛选
-        btnFilterFinance.setText("資助種類 全部");
+//        btnFilterFinance.setText("資助種類 全部");
+        btnFilterFinance.setText(getString(R.string.filter_finance_label) + getString(R.string.all));
         btnFilterFinance.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterFinance);
             popupMenu.getMenuInflater().inflate(R.menu.menu_finance, popupMenu.getMenu());
             popupMenu.setOnMenuItemClickListener(item -> {
                 String selected = "";
                 int id = item.getItemId();
-                if (id == R.id.finance_all) selected = "全部";
-                else if (id == R.id.finance_subsidy) selected = "資助";
-                else if (id == R.id.finance_official) selected = "官立";
-                else if (id == R.id.finance_private) selected = "私立";
+                if (id == R.id.finance_all) {
+                    selected = getString(R.string.all);
+                    m_filterFinance = "";
+                } else if (id == R.id.finance_subsidy) {
+                    selected = getString(R.string.finance_subsidy);
+                    m_filterFinance = "資助";
+                } else if (id == R.id.finance_official) {
+                    selected = getString(R.string.finance_official);
+                    m_filterFinance = "官立";
+                } else if (id == R.id.finance_private) {
+                    selected = getString(R.string.finance_private);
+                    m_filterFinance = "私立";
+                }
 
-                m_filterFinance = selected.equals("全部") ? "" : selected;
-                btnFilterFinance.setText("資助種類 " + selected);
+                btnFilterFinance.setText(getString(R.string.filter_finance_label) + " " + selected);
                 applySearchAndFilter();
                 return true;
             });
@@ -166,22 +203,46 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
 
         // 收藏筛选
-        btnFilterFavorite.setText("收藏 全部");
+//        btnFilterFavorite.setText("收藏 全部");
+        btnFilterFavorite.setText(getString(R.string.filter_fav_label) + getString(R.string.all));
         btnFilterFavorite.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(v.getContext(), btnFilterFavorite);
             popupMenu.getMenuInflater().inflate(R.menu.menu_favorite, popupMenu.getMenu());
             popupMenu.setOnMenuItemClickListener(item -> {
                 String selected = "";
                 int id = item.getItemId();
-                if (id == R.id.fav_all) selected = "全部";
-                else if (id == R.id.fav_favorited) selected = "已收藏";
+                if (id == R.id.fav_all) {
+                    selected = getString(R.string.all);
+                    m_filterFavorite = "";
+                } else if (id == R.id.fav_favorited) {
+                    selected = getString(R.string.fav_done);
+                    m_filterFavorite = "已收藏";
+                }
 
-                m_filterFavorite = selected.equals("全部") ? "" : selected;
-                btnFilterFavorite.setText("收藏 " + selected);
+                btnFilterFavorite.setText(getString(R.string.filter_fav_label) + " " + selected);
                 applySearchAndFilter();
                 return true;
             });
             popupMenu.show();
+        });
+
+        // 绑定新按钮
+        Button btnLanguage = findViewById(R.id.btn_language);
+        btnLanguage.setOnClickListener(v -> {
+            PopupMenu popup = new PopupMenu(MainActivity.this, v);
+            // 直接动态添加菜单项
+            popup.getMenu().add(0, 1, 0, "English");
+            popup.getMenu().add(0, 2, 1, "繁體中文");
+
+            popup.setOnMenuItemClickListener(item -> {
+                if (item.getItemId() == 1) {
+                    updateLocale("en");
+                } else if (item.getItemId() == 2) {
+                    updateLocale("zh"); // 对应繁体中文
+                }
+                return true;
+            });
+            popup.show();
         });
 
         // 拉取JSON数据（不变）
@@ -225,7 +286,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // 收藏按钮
             SwipeMenuItem favItem = new SwipeMenuItem(this)
                     .setBackgroundColor(isFavorited ? 0xFFFF4444 : 0xFF4CAF50)
-                    .setText(isFavorited ? "取消收藏" : "加入收藏")
+//                    .setText(isFavorited ? "取消收藏" : "加入收藏")
+                    .setText(isFavorited ? getString(R.string.swipe_unfav) : getString(R.string.swipe_fav))
                     .setTextColor(0xFFFFFFFF)
                     .setWidth(width)
                     .setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
@@ -234,7 +296,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // 详情按钮
             SwipeMenuItem infoItem = new SwipeMenuItem(this)
                     .setBackgroundColor(0xFF2196F3)
-                    .setText("ℹ️ 詳情")
+//                    .setText("ℹ️ 詳情")
+                    .setText("ℹ️ " + getString(R.string.swipe_detail)) // 使用 ID
                     .setTextColor(0xFFFFFFFF)
                     .setWidth(width)
                     .setHeight(ViewGroup.LayoutParams.MATCH_PARENT);
@@ -265,11 +328,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 // 详情弹窗（无收藏按钮）
                 new AlertDialog.Builder(this)
                         .setTitle(schoolName)
-                        .setMessage("电话：" + school.get(SchoolInfo.PHONE)
-                                + "\n地址：" + school.get(SchoolInfo.ADDR)
-                                + "\n官网：" + school.get(SchoolInfo.WEBSITE))
-                        .setPositiveButton("確定", null)
-                        .setNegativeButton("打開官網", (dialog, which) -> {
+//                        .setMessage("电话：" + school.get(SchoolInfo.PHONE)
+//                                + "\n地址：" + school.get(SchoolInfo.ADDR)
+//                                + "\n官网：" + school.get(SchoolInfo.WEBSITE))
+//                        .setPositiveButton("確定", null)
+//                        .setNegativeButton("打開官網", (dialog, which) -> {
+                        .setMessage(getString(R.string.label_phone) + school.get(SchoolInfo.PHONE) // 建议在xml也定义label_phone
+                                + "\n" + getString(R.string.label_addr) + school.get(SchoolInfo.ADDR)
+                                + "\n" + getString(R.string.label_web) + school.get(SchoolInfo.WEBSITE))
+                        .setPositiveButton(getString(R.string.confirm), null)
+                        .setNegativeButton(getString(R.string.school_website), (dialog, which) -> {
                             Intent intent = new Intent(this, SchoolWebViewActivity.class);
                             intent.putExtra(SchoolWebViewActivity.EXTRA_WEBSITE, school.get(SchoolInfo.WEBSITE));
                             startActivity(intent);
@@ -527,5 +595,58 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 cardLayout = itemView.findViewById(R.id.item_card_layout);
             }
         }
+    }
+
+    private void updateLocale(String langCode) {
+        // 1. 同步写入，确保立即生效
+        SharedPreferences.Editor editor = getSharedPreferences("Settings", MODE_PRIVATE).edit();
+        editor.putString("My_Lang", langCode);
+        editor.commit();
+
+        // 2. 完全重启应用，避免任何 Activity 栈缓存
+        Intent intent = getBaseContext().getPackageManager()
+                .getLaunchIntentForPackage(getBaseContext().getPackageName());
+        if (intent != null) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        }
+        finish();
+        Runtime.getRuntime().exit(0); // 杀掉进程，彻底清零（可选，但对语言切换最有效）
+    }
+
+    // 提取出一个设置语言的方法，方便在 onCreate 调用
+    private void applyLocale(String langCode) {
+        Locale locale = new Locale(langCode);
+        Locale.setDefault(locale);
+        Configuration config = getResources().getConfiguration();
+        config.setLocale(locale);
+        getResources().updateConfiguration(config, getResources().getDisplayMetrics());
+    }
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        // 读取保存的语言，没有就默认英文（或者你想要的默认语言）
+        SharedPreferences prefs = newBase.getSharedPreferences("Settings", MODE_PRIVATE);
+        String lang = prefs.getString("My_Lang", "en");
+
+        // 创建目标 Locale
+        Locale targetLocale = "zh".equals(lang) ? Locale.TRADITIONAL_CHINESE : Locale.ENGLISH;
+
+        // 执行语言配置（标准模版代码）
+        Locale.setDefault(targetLocale);
+        Resources res = newBase.getResources();
+        Configuration config = new Configuration(res.getConfiguration());
+
+        // 兼容不同 API 版本
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            config.setLocale(targetLocale);
+            config.setLocales(new LocaleList(targetLocale));
+        } else {
+            config.locale = targetLocale;
+        }
+
+        // 生成新的 Context 并传递给父类
+        Context context = newBase.createConfigurationContext(config);
+        super.attachBaseContext(context);
     }
 }

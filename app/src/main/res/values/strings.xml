@@ -1,10 +1,33 @@
 <resources>
-    <string name="app_name">香港學校資訊</string>
-    <string name="search_hint">搜尋學校名稱</string>
-    <string name="prev_page">上一頁</string>
-    <string name="next_page">下一頁</string>
-    <string name="school_website">學校官網</string>
-    <string name="confirm">確定</string>
-    <string name="open_website">打開官網</string>
-    <string name="title_activity_maps">MapsActivity</string>
+    <string name="app_name">HK School Info</string>
+    <string name="btn_language">Language</string>
+    <string name="search_hint">Search school name...</string>
+    <string name="prev_page">Previous</string>
+    <string name="next_page">Next</string>
+    <string name="swipe_fav">Favorite</string>
+    <string name="swipe_unfav">Unfavorite</string>
+    <string name="swipe_detail">Detail</string>
+    <string name="school_website">School Website</string>
+
+    <string name="filter_type_label">Type: </string>
+    <string name="filter_gender_label">Gender: </string>
+    <string name="filter_finance_label">Finance: </string>
+    <string name="filter_fav_label">Fav: </string>
+    <string name="all">All</string>
+    <string name="confirm">Confirm</string>
+
+    <string name="label_phone">Phone: </string>
+    <string name="label_addr">Address: </string>
+    <string name="label_web">Website: </string>
+
+    <string name="option_primary">Primary</string>
+    <string name="option_middle">Secondary</string>
+    <string name="gender_mix">Co-ed</string>
+    <string name="gender_male">Boys</string>
+    <string name="gender_female">Girls</string>
+    <string name="finance_subsidy">Aided</string>
+    <string name="finance_official">Government</string>
+    <string name="finance_private">Private</string>
+    <string name="fav_done">Favorited</string>
+    <string name="toast_selected">Selected: </string>
 </resources>

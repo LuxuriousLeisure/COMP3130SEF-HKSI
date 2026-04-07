@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/fav_all" android:title="全部"/>
-    <item android:id="@+id/fav_favorited" android:title="已收藏"/>
+    <item
+        android:id="@+id/fav_all"
+        android:title="@string/all" />
+    <item
+        android:id="@+id/fav_favorited"
+        android:title="@string/fav_done" />
 </menu>

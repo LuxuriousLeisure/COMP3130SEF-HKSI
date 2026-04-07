@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/finance_all" android:title="全部"/>
-    <item android:id="@+id/finance_subsidy" android:title="資助"/>
-    <item android:id="@+id/finance_official" android:title="官立"/>
-    <item android:id="@+id/finance_private" android:title="私立"/>
+    <item
+        android:id="@+id/finance_all"
+        android:title="@string/all" />
+    <item
+        android:id="@+id/finance_subsidy"
+        android:title="@string/finance_subsidy" />
+    <item
+        android:id="@+id/finance_official"
+        android:title="@string/finance_official" />
+    <item
+        android:id="@+id/finance_private"
+        android:title="@string/finance_private" />
 </menu>

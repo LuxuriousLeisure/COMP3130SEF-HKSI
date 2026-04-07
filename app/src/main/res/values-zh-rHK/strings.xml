@@ -1,9 +1,33 @@
 <resources>
     <string name="app_name">香港學校資訊</string>
-    <string name="search_hint">搜尋學校名稱</string>
+    <string name="btn_language">語言/Language</string>
+    <string name="search_hint">搜尋學校名稱...</string>
     <string name="prev_page">上一頁</string>
     <string name="next_page">下一頁</string>
+    <string name="swipe_fav">加入收藏</string>
+    <string name="swipe_unfav">取消收藏</string>
+    <string name="swipe_detail">查看詳情</string>
     <string name="school_website">學校官網</string>
+
+    <string name="filter_type_label">學校類型: </string>
+    <string name="filter_gender_label">學生性別: </string>
+    <string name="filter_finance_label">資助種類: </string>
+    <string name="filter_fav_label">收藏: </string>
+    <string name="all">全部</string>
     <string name="confirm">確定</string>
-    <string name="open_website">打開官網</string>
+
+    <string name="label_phone">電話：</string>
+    <string name="label_addr">地址：</string>
+    <string name="label_web">官網：</string>
+
+    <string name="option_primary">小學</string>
+    <string name="option_middle">中學</string>
+    <string name="gender_mix">男女</string>
+    <string name="gender_male">男</string>
+    <string name="gender_female">女</string>
+    <string name="finance_subsidy">資助</string>
+    <string name="finance_official">官立</string>
+    <string name="finance_private">私立</string>
+    <string name="fav_done">已收藏</string>
+    <string name="toast_selected">選中：</string>
 </resources>

@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 对应你的三个筛选选项 -->
     <item
         android:id="@+id/option_all"
-        android:title="全部"/>
+        android:title="@string/all" />
     <item
         android:id="@+id/option_primary"
-        android:title="小學"/>
+        android:title="@string/option_primary" />
     <item
         android:id="@+id/option_middle"
-        android:title="中學"/>
+        android:title="@string/option_middle" />
 </menu>
